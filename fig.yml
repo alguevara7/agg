@@ -1,0 +1,40 @@
+zookeeper:
+  image: jplock/zookeeper:3.4.6
+  ports:
+    - "2181:2181"
+kafka1:
+  image: wurstmeister/kafka:0.8.1
+  ports:
+    - "9091:9091"
+  links:
+    - zookeeper:zk
+  environment:
+    BROKER_ID: 1
+    HOST_IP: 192.168.59.103
+    PORT: 9091
+kafka2:
+  image: wurstmeister/kafka:0.8.1
+  ports:
+    - "9092:9092"
+  links:
+    - zookeeper:zk
+  environment:
+    BROKER_ID: 2
+    HOST_IP: 192.168.59.103
+    PORT: 9092
+mysql1:
+  image: stackbrew/mysql:5.7.4
+  ports:
+    - "3306:3306"
+  environment:
+    MYSQL_ROOT_PASSWORD: password
+    MYSQL_DATABASE: counters
+    MYSQL_USER: counters
+    MYSQL_PASSWORD: counters
+
+#this will be the main image, it can be scaled with fig scale
+#aggregator1:
+#  image: stackbrew/java:8
+#  links:
+#    - mysql1:mysql
+
