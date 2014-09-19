@@ -12,7 +12,7 @@ kafka1:
     - graphite:graphite
   environment:
     BROKER_ID: 1
-    HOST_IP: 192.168.59.104
+    HOST_IP: $DOCKER_HOST_IP
     PORT: 9091
     GRAPHITE_ENABLED: true
     GRAPHITE_GROUP: kafka1
@@ -26,7 +26,7 @@ kafka2:
     - graphite:graphite
   environment:
     BROKER_ID: 2
-    HOST_IP: 192.168.59.104
+    HOST_IP: $DOCKER_HOST_IP
     PORT: 9092
     GRAPHITE_ENABLED: true
     GRAPHITE_GROUP: kafka2
@@ -41,27 +41,11 @@ mysql:
     MYSQL_USER: counters
     MYSQL_PASSWORD: counters
 graphite:
-  image: hopsoft/graphite-statsd:latest
+  image: nickstenning/graphite:latest
   ports:
     - "8881:80"
-#    - "2003:2003"
+    - "2003:2003"
   expose:
     - "2003"
-  command: /opt/hopsoft/graphite-statsd/start
   volumes:
-#    - /var/lib/boot2docker/data/counters-clj/graphite/storage:/opt/graphite/storage
-    - /opt/graphite/storage
-    - /opt/graphite/conf
-    - /var/log/graphite
-
-#    - /var/lib/boot2docker/data/counters-clj/graphite:/opt/graphite/storage
-#
-#    -v /var/log/graphite:/var/log \
-#	-v /opt/graphite/storage \
-#	-v /opt/graphite/conf \
-
-#this will be the main image, it can be scaled with fig scale
-#aggregator1:
-#  image: stackbrew/java:8
-#  links:
-#    - mysql1:mysql
+    - /var/lib/graphite/storage/whisper
