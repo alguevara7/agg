@@ -16,7 +16,7 @@ kafka1:
     PORT: 9091
     GRAPHITE_ENABLED: true
     GRAPHITE_GROUP: kafka1
-    KAFKA_JMX_OPTS: -Dcom.sun.management.jmxremote -Djava.rmi.server.hostname=192.168.59.104 -Dcom.sun.management.jmxremote.port=8888 -Dcom.sun.management.jmxremote.rmi.port=8888 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.local.only=false -Dcom.sun.management.jmxremote.ssl=false
+    KAFKA_JMX_OPTS: -Dcom.sun.management.jmxremote -Djava.rmi.server.hostname=$DOCKER_HOST_IP -Dcom.sun.management.jmxremote.port=8888 -Dcom.sun.management.jmxremote.rmi.port=8888 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.local.only=false -Dcom.sun.management.jmxremote.ssl=false
 kafka2:
   image: alexguev/kafka:0.8.1.1
   ports:
