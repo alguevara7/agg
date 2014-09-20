@@ -17,28 +17,37 @@
 
 ;; {:action :flush, {...}}
 
-(defn aggregate [c a f]
-  "'c' channel of events
+
+(defn aggregate [a v f]
+  "
   'a' function that aggregates the value of event into result
-  'f' function that writes result and event offset to db"
+  'f' function that writes result and event offset to db
+  "
   (let [c (chan)]
     (go
-     (loop [action :boot state {} event nil]
-       (println action)
+     (loop [state {}
+            {:keys [action value offset] :as event} {:action :boot}]
        (case action
-         :boot (recur :process {:result 0 :offset 0} (<! c))
-         :process (recur :process
-                         {:result (a (:result state) (:value event))
-                          :offset (:offset event)}
+         :boot (recur {:result v :offset 0} (<! c))
+         :process (recur {:result (a (:result state) value) :offset offset}
                          (<! c))
-         :flush (f state))))
+         :flush (do (f state)
+                  (recur state
+                         (<! c))))))
     c))
 
 
 
-(def c (aggregate c + (fn [{:keys [result offset] :as state}]
-                 (println (str "result:" result "offset" offset)))))
+(def c (aggregate (fn [r v]
+                    (println (str "AGREGATE -> r:" r " v:" v))
+                    (+ r v))
+                  0
+                  (fn [{:keys [result offset] :as state}]
+                    (println (str "FLUSH: -> " "result:" result " offset: " offset)))))
 
-(>!! c {:action :process :event {:value 100 :offset 1}})
 
-(>!! c {:action :flush :event {:value 100 :offset 1}})
+
+(>!! c {:action :process :value 1001 :offset 4})
+
+(>!! c {:action :flush})
+
