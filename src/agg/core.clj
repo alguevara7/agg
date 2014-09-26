@@ -1,4 +1,4 @@
-(ns counters-clj.aggregator
+(ns agg.core
   (:require [clojure.core.async :as async :refer [chan go <! >! >!! <!! alt!! alts!!]]))
 
 ;; TODO: graphite!
@@ -15,7 +15,7 @@
 ;; {:action :flush, {...}}
 
 
-(defn aggregator [af init-state ff]
+(defn agg-chan [af init-state ff]
   "
   'af' function that aggregates the value of event into result
   'ff' function that writes result and event offset to db
@@ -54,21 +54,21 @@
           (<! (async/timeout period))
           (recur)))))
 ;; ef: [long] -> seq[[offset message]]
-(defn start-aggregator [sf
-                        ef ef-period
-                        af
-                        ff ff-period]
+(defn agg [sf
+           ef ef-period
+           af
+           ff ff-period]
   (let [{:keys [offset] :as init-state} (sf)
-        c (aggregator af init-state ff)]
+        c (agg-chan af init-state ff)]
     (sample-iterate ef offset ef-period c)
     (sample (fn [] {:action :flush}) ff-period c)
     c))
 
-(defn lala [i] (start-aggregator (fn [] {:result 0 :offset 0})
-                         (fn [offset] {:action :process :value 3 :offset (inc offset)}) 10
-                         (fn [r v] (+ r v))
-                         (fn [{:keys [result offset] :as state}]
-                           (println (str "FLUSH: -> " "result:" result " offset: " offset))) 5000))
+(defn lala [i] (agg (fn [] {:result 0 :offset 0})
+                    (fn [offset] {:action :process :value 3 :offset (inc offset)}) 10
+                    (fn [r v] (+ r v))
+                    (fn [{:keys [result offset] :as state}]
+                      (println (str "FLUSH: -> " "result:" result " offset: " offset))) 5000))
 #_(def cs (map #(lala %) (range 50)))
 
 
