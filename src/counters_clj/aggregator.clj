@@ -48,7 +48,7 @@
           (<! (async/timeout period))
           (recur (inc offset))))))
 
-(defn sample [f period c]
+(defn sample-iterate [f period c]
   (go (loop []
         (when (>! c (f))
           (<! (async/timeout period))
@@ -60,7 +60,7 @@
                         ff ff-period]
   (let [{:keys [offset] :as init-state} (sf)
         c (aggregator af init-state ff)]
-    (fetch ef offset ef-period c)
+    (sample-iterate ef offset ef-period c)
     (sample (fn [] {:action :flush}) ff-period c)
     c))
 

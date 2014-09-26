@@ -12,7 +12,7 @@
 
 (defn message
   ([topic value] (message topic nil value))
-  ([topic key value] (KeyedMessage. topic key key value)))
+  ([topic key value] (new KeyedMessage topic key key value)))
 
 (defn send-message
   [^Producer producer ^KeyedMessage message]
