@@ -53,7 +53,7 @@
         (when (>! c (f))
           (<! (async/timeout period))
           (recur)))))
-
+;; ef: [long] -> seq[[offset message]]
 (defn start-aggregator [sf
                         ef ef-period
                         af
@@ -64,16 +64,12 @@
     (sample (fn [] {:action :flush}) ff-period c)
     c))
 
-
 (defn lala [i] (start-aggregator (fn [] {:result 0 :offset 0})
                          (fn [offset] {:action :process :value 3 :offset (inc offset)}) 10
                          (fn [r v] (+ r v))
                          (fn [{:keys [result offset] :as state}]
                            (println (str "FLUSH: -> " "result:" result " offset: " offset))) 5000))
+#_(def cs (map #(lala %) (range 50)))
 
 
-(def cs (map #(lala %) (range 50)))
-
-(doall cs)
-
-(doseq [c cs] (async/close! c))
+#_(doseq [c cs] (async/close! c))
