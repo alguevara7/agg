@@ -24,17 +24,43 @@
                                   " ON DUPLICATE KEY UPDATE offset = ?")
                              partition-id offset offset]))))
 
+(def counter (atom 0))
+
 (defn process-event [r ad-id]
+  (swap! counter dec)
   (update-in r [ad-id] #(if % (inc %) 1)))
 
-(defn example [] (agg (fn [] {:result {} :offset 0})
-                      (fn [offset]
-                        {:action :process :value (rand-int 100) :offset (inc offset)}) 1
-                      process-event
-                      (partial flush-state 0 "view") 5000))
+
+(defn fetch-event [partition-id offset]
+  (swap! counter inc)
+  {:action :process :value (+ (* partition-id 10000) (rand-int 10000)) :offset (inc offset)})
+
+;; TODO
+;;
+;; - need to publish aggregation batches of a certain size  (the batch size is how many keys there are in state)
+;;   that controls how much data will be written to the db in one transaction
+;;
+;; - allow events to be fetched in batches
+(defn start-counting [counter-type partition-id]
+  (agg (fn [] {:result {} :offset 0})
+       (partial fetch-event partition-id) 10
+       process-event
+       (partial flush-state partition-id counter-type) 10000
+       10000))
 
 
-(def c (example))
+(def c1 (start-counting "view" 0))
+(def c2 (start-counting "view" 1))
+(def c3 (start-counting "view" 2))
+(def c4 (start-counting "view" 3))
+(def c5 (start-counting "view" 4))
+(def c6 (start-counting "view" 5))
+(def c7 (start-counting "view" 6))
+(def c8 (start-counting "view" 7))
+(def c9 (start-counting "view" 8))
 
-(async/close! c)
+
+(async/close! c9)
+
+@counter
 
