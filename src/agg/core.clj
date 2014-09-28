@@ -17,7 +17,7 @@
 
   returns a channel this aggregator will process messages from
   "
-  (let [c (chan)]
+  (let [c (chan 1000)]
     (go
      (loop [state init-state
             {:keys [action value offset] :as event} {:action :boot}]
