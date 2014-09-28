@@ -3,11 +3,6 @@
 
 ;; TODO: graphite!
 
-; coordinator
-
-;; aggregator
-
-
 ;; {:action :boot, {...}}
 
 ;; {:action :process, {:offset 1 :value 1}}
@@ -26,7 +21,7 @@
     (go
      (loop [state init-state
             {:keys [action value offset] :as event} {:action :boot}]
-       (when event
+       (when event ;;exit when channel is closed
          (case action
            :boot (recur init-state (<! c))
            :process (recur {:result (af (:result state) value) :offset offset}
@@ -36,7 +31,7 @@
            (recur state (<! c))))))
     c))
 
-(defn fetch [f init-offset period c]
+(defn sample-iterate [f init-offset period c]
   "'period' in milliseconds
   'f' function to sample
   'c' channel to write sampled value to
@@ -48,11 +43,12 @@
           (<! (async/timeout period))
           (recur (inc offset))))))
 
-(defn sample-iterate [f period c]
+(defn sample [f period c]
   (go (loop []
         (when (>! c (f))
           (<! (async/timeout period))
           (recur)))))
+
 ;; ef: [long] -> seq[[offset message]]
 (defn agg [sf
            ef ef-period
@@ -63,13 +59,3 @@
     (sample-iterate ef offset ef-period c)
     (sample (fn [] {:action :flush}) ff-period c)
     c))
-
-(defn lala [i] (agg (fn [] {:result 0 :offset 0})
-                    (fn [offset] {:action :process :value 3 :offset (inc offset)}) 10
-                    (fn [r v] (+ r v))
-                    (fn [{:keys [result offset] :as state}]
-                      (println (str "FLUSH: -> " "result:" result " offset: " offset))) 5000))
-#_(def cs (map #(lala %) (range 50)))
-
-
-#_(doseq [c cs] (async/close! c))
