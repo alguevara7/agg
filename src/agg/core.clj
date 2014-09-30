@@ -1,28 +1,34 @@
 (ns agg.core
-  (:require [clojure.core.async :as async :refer [chan go <! >! >!! <!! alt!! alts!!]]))
-
-;; TODO: graphite!
+  (:require [clojure.core.async :as async :refer [chan go <! >! sliding-buffer]]))
 
 ;; retrieve events in batches
 
 ;; figure out creation of channels ... agg should handle it ...
 
-(defn do-agg [ch af init-state ff]
+;; stop when outout channel is closed
+
+;; handle exceptions
+
+(defn do-agg [chi f init cho n]
   "
-  'ch' the channel events will be read from
-  'af' function that aggregates the value of event into result
-  'ff' function that writes result and event offset to db
+  'chi' input channel, events will be read from it
+  'f' function that aggregates the value of events into a result
+  'cho' output channel, aggregate results will be writen to it
   "
-  (go (loop [state init-state
-             {:keys [action value offset] :as event} {:action :boot}]
+  (go (loop [state init
+             {:keys [action value offset] :as event} {:action :boot}
+             i 0]
         (when event ;;exit when channel is closed
           (case action
-            :boot (recur init-state (<! ch))
-            :process (recur {:result (af (:result state) value) :offset offset}
-                            (<! ch))
-            :flush (do (ff state)
-                     (recur state (<! ch)))
-            (recur state (<! ch)))))))
+            :boot (recur state (<! chi) i)
+            :process (let [new-state {:result (f (:result state) value) :offset offset}
+                           new-i (inc i)]
+                       (if (>= new-i n)
+                         (recur new-state {:action :flush} new-i)
+                         (recur new-state (<! chi) new-i)))
+            :flush (do (>! cho state) ;; TODO flush changed entries only ! need a set to store keys, flush when count >= n.
+                       (recur state (<! chi) 0))
+            (recur state (<! chi) i))))))
 
 (defn sample-iterate [f init-offset period ch]
   "'period' in milliseconds
@@ -42,15 +48,23 @@
           (<! (async/timeout period))
           (recur)))))
 
-;; ef: [long] -> seq[[offset message]]
+(defn subscribe [f period ch]
+  (go (loop []
+        (when-let [v (<! ch)]
+          (f v)
+          (<! (async/timeout period))
+          (recur)))))
+
 (defn agg [sf
-           ef ef-period
+           ef ef-period size-ch-input
            af
-           ff ff-period
+           ff ff-period size-ch-output
            n]
-  (let [{:keys [offset] :as init-state} (sf)
-        ch (chan n)]
-    (do-agg ch af init-state ff)
-    (sample-iterate ef offset ef-period ch)
-    (sample (fn [] {:action :flush}) ff-period ch)
-    ch))
+  (let [{:keys [offset] :as init} (sf)
+        chi (chan size-ch-input)
+        cho (chan size-ch-output)]
+    (do-agg chi af init cho n)
+    (sample-iterate ef offset ef-period chi)
+    (sample (fn [] {:action :flush}) ff-period chi)
+    (subscribe ff ff-period cho)
+    chi))

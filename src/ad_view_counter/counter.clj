@@ -5,6 +5,10 @@
            [clj-time.core :as t]
            [clj-time.coerce :as c]))
 
+;; TODO:
+;; - graphite!
+;; - write changed counters only
+
 (def db {:subprotocol "mysql"
          :subname "//192.168.59.103:3306/agg"
          :user "agg"
@@ -32,8 +36,9 @@
 
 
 (defn fetch-event [partition-id offset]
-  (swap! counter inc)
-  {:action :process :value (+ (* partition-id 10000) (rand-int 10000)) :offset (inc offset)})
+  (let [n 100000]
+    (swap! counter inc)
+    {:action :process :value (+ (* partition-id n) (rand-int n)) :offset (inc offset)}))
 
 ;; TODO
 ;;
@@ -43,24 +48,34 @@
 ;; - allow events to be fetched in batches
 (defn start-counting [counter-type partition-id]
   (agg (fn [] {:result {} :offset 0})
-       (partial fetch-event partition-id) 10
+       (partial fetch-event partition-id) 1 100
        process-event
-       (partial flush-state partition-id counter-type) 10000
-       10000))
+       (partial flush-state partition-id counter-type) 1000 100
+       50))
+
 
 
 (def c1 (start-counting "view" 0))
 (def c2 (start-counting "view" 1))
-(def c3 (start-counting "view" 2))
-(def c4 (start-counting "view" 3))
-(def c5 (start-counting "view" 4))
-(def c6 (start-counting "view" 5))
-(def c7 (start-counting "view" 6))
-(def c8 (start-counting "view" 7))
-(def c9 (start-counting "view" 8))
+(def c3 (start-counting "view" 3))
+(def c4 (start-counting "view" 4))
+(def c5 (start-counting "view" 5))
+(def c6 (start-counting "view" 6))
+(def c7 (start-counting "view" 7))
+(def c8 (start-counting "view" 8))
+(def c9 (start-counting "view" 9))
+(def c10 (start-counting "view" 10))
+(def c11 (start-counting "view" 11))
+(def c12 (start-counting "view" 12))
+(def c13 (start-counting "view" 13))
+(def c13 (start-counting "view" 14))
+(def c14 (start-counting "view" 15))
 
 
-(async/close! c9)
+
+(async/close! c1)
 
 @counter
+
+
 
