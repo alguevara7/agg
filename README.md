@@ -6,6 +6,9 @@ A Clojure library designed to ... well, that part is up to you.
 
 FIXME
 
+TEST!!:w
+
+
 ## License
 
 Copyright © 2014 FIXME
