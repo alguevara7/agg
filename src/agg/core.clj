@@ -1,13 +1,5 @@
 (ns agg.core
-  (:require [clojure.core.async :as async :refer [chan go <! >! sliding-buffer]]))
-
-;; retrieve events in batches
-
-;; figure out creation of channels ... agg should handle it ...
-
-;; stop when outout channel is closed
-
-;; handle exceptions
+  (:require [clojure.core.async :as async :refer [chan go <! >! sliding-buffer close!]]))
 
 (defn do-agg [chi f init cho n]
   "
@@ -16,17 +8,17 @@
   'cho' output channel, aggregate results will be writen to it
   "
   (go (loop [state init
-             {:keys [action value offset] :as event} {:action :boot}
+             {:keys [action value offset] :as message} {:action :boot}
              i 0]
-        (when event ;;exit when channel is closed
+        (when message  ;; TODO recur from then end, build event before hand
           (case action
             :boot (recur state (<! chi) i)
             :process (let [new-state {:result (f (:result state) value) :offset offset}
                            new-i (inc i)]
                        (if (>= new-i n)
-                         (recur new-state {:action :flush} new-i)
+                         (recur new-state {:action :flush} i)
                          (recur new-state (<! chi) new-i)))
-            :flush (do (>! cho state) ;; TODO flush changed entries only ! need a set to store keys, flush when count >= n.
+            :flush (do (>! cho state)
                        (recur state (<! chi) 0))
             (recur state (<! chi) i))))))
 
@@ -68,3 +60,22 @@
     (sample (fn [] {:action :flush}) ff-period chi)
     (subscribe ff ff-period cho)
     chi))
+
+;; (def c1 (chan))
+;; (def out (chan 1))
+
+;; (let [a (->> c1
+;;              (async/reduce + 0)
+;;              (vector)
+;;              (async/map #({:v % :k "awesome"}))
+;;              )]
+;;   (async/pipe a out false))
+
+;; (async/>!! c1 14)
+;; (close! c1)
+
+;; (async/<!! out)
+
+
+
+

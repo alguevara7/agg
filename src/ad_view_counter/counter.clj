@@ -5,17 +5,11 @@
            [clj-time.core :as t]
            [clj-time.coerce :as c]))
 
-;; TODO:
-;; - graphite!
-;; - write changed counters only
-
 (def db {:subprotocol "mysql"
          :subname "//192.168.59.103:3306/agg"
          :user "agg"
          :password "agg"})
 
-
-;; only write counters that changed
 (defn flush-state [partition-id counter-type {:keys [result offset] :as state}]
   (let [now (c/to-date (t/now))]
     (jdbc/with-db-transaction [conn db :isolation :read-committed]
@@ -40,12 +34,6 @@
     (swap! counter inc)
     {:action :process :value (+ (* partition-id n) (rand-int n)) :offset (inc offset)}))
 
-;; TODO
-;;
-;; - need to publish aggregation batches of a certain size  (the batch size is how many keys there are in state)
-;;   that controls how much data will be written to the db in one transaction
-;;
-;; - allow events to be fetched in batches
 (defn start-counting [counter-type partition-id]
   (agg (fn [] {:result {} :offset 0})
        (partial fetch-event partition-id) 1 100
