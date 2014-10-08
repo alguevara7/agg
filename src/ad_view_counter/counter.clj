@@ -1,6 +1,6 @@
 (ns ad-view-counter
   (require [agg.core :refer :all]
-           [clojure.core.async :refer [chan]]
+           [clojure.core.async :refer [chan close!]]
            [clojure.java.jdbc :as jdbc]
            [clj-time.core :as t]
            [clj-time.coerce :as c]))
@@ -39,17 +39,18 @@
 (defn start-counting [counter-type partition-id]
   (let [in (chan 128)
         out (chan 128)]
-    (agg in process-event {:result {} :offset 0} out 64 1000)
-    (sample-from-offset (partial fetch-event partition-id))
-    (subscribe (partial flush-state partition-id counter-type)))
+    (agg in process-event {:result {} :offset 0} out 256 (* 30 1000))
+    (sample-from-offset (partial fetch-event partition-id) 0 10 in)
+    (subscribe out (partial flush-state partition-id counter-type))
+    in)
   )
 
 
-;; (def c1 (start-counting "view" 0))
-;; (def c2 (start-counting "view" 1))
-;; (def c3 (start-counting "view" 3))
-;; (def c4 (start-counting "view" 4))
-;; (def c5 (start-counting "view" 5))
+(def c1 (start-counting "view" 0))
+(def c2 (start-counting "view" 1))
+(def c3 (start-counting "view" 3))
+(def c4 (start-counting "view" 4))
+(def c5 (start-counting "view" 5))
 ;; (def c6 (start-counting "view" 6))
 ;; (def c7 (start-counting "view" 7))
 ;; (def c8 (start-counting "view" 8))
@@ -61,7 +62,7 @@
 ;; (def c13 (start-counting "view" 14))
 ;; (def c14 (start-counting "view" 15))
 
-;;(async/close! c1)
+(close! c5)
 
 @counter
 

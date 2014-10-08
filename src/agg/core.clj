@@ -20,7 +20,6 @@
 
 (defn stage-flush [in out n msecs]
   (go (loop [state {:i 0}]
-        (println state)
         (let [t (timeout msecs)
               [message ch] (alts! [in t])]
           (if-not (nil? message)
@@ -57,7 +56,7 @@
           (<! (async/timeout period))
           (recur)))))
 
-(defn subscribe [f ch]
+(defn subscribe [ch f]
   (go (loop []
         (when-let [v (<! ch)]
           (f v)
