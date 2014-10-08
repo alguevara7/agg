@@ -1,6 +1,6 @@
 (ns ad-view-counter
   (require [agg.core :refer :all]
-           [clojure.core.async :as async]
+           [clojure.core.async :refer [chan]]
            [clojure.java.jdbc :as jdbc]
            [clj-time.core :as t]
            [clj-time.coerce :as c]))
@@ -32,36 +32,36 @@
 (defn fetch-event [partition-id offset]
   (let [n 100000]
     (swap! counter inc)
-    {:action :process :value (+ (* partition-id n) (rand-int n)) :offset (inc offset)}))
+    {:value (+ (* partition-id n) (rand-int n)) :offset (inc offset)}))
+
+;(defn agg [in f init out n msecs]
 
 (defn start-counting [counter-type partition-id]
-  (agg (fn [] {:result {} :offset 0})
-       (partial fetch-event partition-id) 1 100
-       process-event
-       (partial flush-state partition-id counter-type) 1000 100
-       50))
+  (let [in (chan 128)
+        out (chan 128)]
+    (agg in process-event {:result {} :offset 0} out 64 1000)
+    (sample-from-offset (partial fetch-event partition-id))
+    (subscribe (partial flush-state partition-id counter-type)))
+  )
 
 
+;; (def c1 (start-counting "view" 0))
+;; (def c2 (start-counting "view" 1))
+;; (def c3 (start-counting "view" 3))
+;; (def c4 (start-counting "view" 4))
+;; (def c5 (start-counting "view" 5))
+;; (def c6 (start-counting "view" 6))
+;; (def c7 (start-counting "view" 7))
+;; (def c8 (start-counting "view" 8))
+;; (def c9 (start-counting "view" 9))
+;; (def c10 (start-counting "view" 10))
+;; (def c11 (start-counting "view" 11))
+;; (def c12 (start-counting "view" 12))
+;; (def c13 (start-counting "view" 13))
+;; (def c13 (start-counting "view" 14))
+;; (def c14 (start-counting "view" 15))
 
-(def c1 (start-counting "view" 0))
-(def c2 (start-counting "view" 1))
-(def c3 (start-counting "view" 3))
-(def c4 (start-counting "view" 4))
-(def c5 (start-counting "view" 5))
-(def c6 (start-counting "view" 6))
-(def c7 (start-counting "view" 7))
-(def c8 (start-counting "view" 8))
-(def c9 (start-counting "view" 9))
-(def c10 (start-counting "view" 10))
-(def c11 (start-counting "view" 11))
-(def c12 (start-counting "view" 12))
-(def c13 (start-counting "view" 13))
-(def c13 (start-counting "view" 14))
-(def c14 (start-counting "view" 15))
-
-
-
-(async/close! c1)
+;;(async/close! c1)
 
 @counter
 
