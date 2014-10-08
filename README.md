@@ -8,6 +8,8 @@ TBD
 
 ## TODO
 
+- exit when put is closed
+
 - need to write unit tests
 
 - retrieve events in batches

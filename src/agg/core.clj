@@ -15,7 +15,8 @@
           (if (nil? message)
             (if (= ch t)
               (if (> i flushed-at)
-                (do (>! out state) (recur (-> state (dissoc :delta) (assoc :flushed-at i))))
+                (when (>! out state)
+                  (recur (-> state (dissoc :delta) (assoc :flushed-at i))))
                 (recur state))
               (when (> i flushed-at) (>! out state)))
             (let [[new-result new-delta] (f [result delta] value)
@@ -25,7 +26,8 @@
                                                (assoc :offset offset)
                                                (update-in [:i] inc))]
               (if (zero? (rem new-i n))
-                (do (>! out new-state) (recur (-> new-state (dissoc :delta) (assoc :flushed-at new-i))))
+                (when (>! out new-state)
+                  (recur (-> new-state (dissoc :delta) (assoc :flushed-at new-i))))
                 (recur new-state)))
             )))))
 
