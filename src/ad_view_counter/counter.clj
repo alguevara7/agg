@@ -1,6 +1,7 @@
 (ns ad-view-counter
   (require [agg.core :refer :all]
-           [clojure.core.async :refer [chan close!]]
+           [agg.metrics :refer :all]
+           [clojure.core.async :refer [chan close! buffer]]
            [clojure.java.jdbc :as jdbc]
            [clj-time.core :as t]
            [clj-time.coerce :as c]))
@@ -22,10 +23,7 @@
                                   " ON DUPLICATE KEY UPDATE offset = ?")
                              partition-id offset offset]))))
 
-(def counter (atom 0))
-
 (defn increment-counter [[result delta] ad-id]
-  (swap! counter dec)
   (let [new-result (update-in result [ad-id] #(if % (inc %) 1))
         new-delta (assoc delta ad-id (get new-result ad-id))]
     [new-result new-delta]))
@@ -33,20 +31,20 @@
 
 (defn fetch-event [partition-id offset]
   (let [n 100000]
-    (swap! counter inc)
     {:value (+ (* partition-id n) (rand-int n)) :offset (inc offset)}))
 
 ;;(defn agg [in f init out n msecs]
 
 (defn start-counting [counter-type partition-id]
-  (let [in (chan 16)
-        out (chan 16)]
-    (agg in increment-counter {} out 128 (* 5 1000))
-    (sample-from-offset (partial fetch-event partition-id) 0 10 in)
+  (let [in (chan (buffer-with-metrics (buffer 256) (str "input." partition-id)))
+        out (chan (buffer-with-metrics (buffer 32) (str "output." partition-id)))]
+    (agg in increment-counter {} out 64 (* 5 1000))
+    (sample-from-offset (partial fetch-event partition-id) 0 1 in)
     (subscribe out (partial flush-state partition-id counter-type))
     in)
   )
 
+(start-reporter 5)
 
 (def c1 (start-counting "view" 1))
 (def c2 (start-counting "view" 2))
@@ -61,12 +59,10 @@
 (def c11 (start-counting "view" 11))
 (def c12 (start-counting "view" 12))
 (def c13 (start-counting "view" 13))
-(def c14 (start-counting "view" 14))
-(def c15 (start-counting "view" 15))
+;; (def c14 (start-counting "view" 14))
+;; (def c15 (start-counting "view" 15))
 
-(close! c13)
-
-@counter
+(close! c9)
 
 
 

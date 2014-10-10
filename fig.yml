@@ -1,3 +1,24 @@
+zookeeper:
+  image: jplock/zookeeper:3.4.6
+  ports:
+    - "2181:2181"
+kafka1:
+  image: alexguev/kafka:0.8.1.1
+  ports:
+    - "9091:9091"
+    - "8881:8888"
+  links:
+    - zookeeper:zk
+    - graphite:graphite
+  environment:
+    BROKER_ID: 1
+    HOST_IP: $DOCKER_HOST_IP
+    PORT: 9091
+    GRAPHITE_ENABLED: true
+    GRAPHITE_GROUP: kafka1
+    KAFKA_JMX_OPTS: -Dcom.sun.management.jmxremote -Djava.rmi.server.hostname=$DOCKER_HOST_IP -Dcom.sun.management.jmxremote.port=8888 -Dcom.sun.management.jmxremote.rmi.port=8888 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.local.only=false -Dcom.sun.management.jmxremote.ssl=false
+  volumes:
+    - /var/kafka1
 mysql:
   image: mysql:5.7.4
   ports:
@@ -7,3 +28,12 @@ mysql:
     MYSQL_DATABASE: agg
     MYSQL_USER: agg
     MYSQL_PASSWORD: agg
+graphite:
+  image: nickstenning/graphite:latest
+  ports:
+    - "8000:80"
+    - "2003:2003"
+  expose:
+    - "2003"
+  volumes:
+    - /var/lib/graphite/storage/whisper

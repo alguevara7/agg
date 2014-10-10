@@ -8,7 +8,16 @@ TBD
 
 ## TODO
 
-- exit when put is closed
+- (X) integrated with graphite !
+
+- use normal distribution for simulation
+
+- integrate with kafka !
+  - use one node for now
+
+- use two kafka nodes (will need to figure out leader and stuff like that)
+
+- (X) exit when put is closed
 
 - need to write unit tests
 

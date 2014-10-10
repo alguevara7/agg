@@ -13,4 +13,6 @@
                  [ragtime/ragtime.sql.files "0.3.6"]
                  [org.clojure/java.jdbc "0.3.5"]
                  [mysql/mysql-connector-java "5.1.32"]
-                 [clj-time "0.8.0"]])
+                 [clj-time "0.8.0"]
+                 [metrics-clojure "2.3.0"]
+                 [metrics-clojure-graphite "2.3.0"]])
