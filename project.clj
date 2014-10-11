@@ -15,4 +15,5 @@
                  [mysql/mysql-connector-java "5.1.32"]
                  [clj-time "0.8.0"]
                  [metrics-clojure "2.3.0"]
-                 [metrics-clojure-graphite "2.3.0"]])
+                 [metrics-clojure-graphite "2.3.0"]
+                 [overtone "0.9.1"]])
