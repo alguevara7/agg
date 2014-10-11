@@ -8,7 +8,17 @@ TBD
 
 ## TODO
 
+- (X) retrieve events in batches
+
+- add core.typed
+
 - (X) integrated with graphite !
+
+- (X) midi control exploration
+
+- change message-chunk-size, flush n limit, flush msecs limit, input channel size, output channel size with Midi device
+  - close current input
+  - create new agg :) with new params
 
 - use normal distribution for simulation
 
@@ -20,8 +30,6 @@ TBD
 - (X) exit when put is closed
 
 - need to write unit tests
-
-- retrieve events in batches
 
 - figure out creation of channels ... agg should handle it ...
 

@@ -1,5 +1,5 @@
 (ns agg.core
-  (:require [clojure.core.async :as async :refer [chan go <! >! go-loop alts! timeout]]))
+  (:require [clojure.core.async :as async :refer [chan go <! >! >!! <!! go-loop alts! timeout onto-chan buffer]]))
 
 (defn agg [in f init out n msecs]
   "
@@ -38,9 +38,15 @@
   'ch' channel to write sampled value to
   "
   (go (loop [offset init-offset]
-        (when (>! ch (f offset))
-          (<! (async/timeout period))
-          (recur (inc offset))))))
+        (let [data (f offset)]
+          (if (coll? data)
+            (do (<! (onto-chan ch data false))
+              (when-not (.closed? ch)
+                (<! (async/timeout period))
+                (recur (:offset (last data)))))
+            (when (>! ch data)
+              (<! (async/timeout period))
+              (recur (inc offset))))))))
 
 (defn sample [f period ch]
   (go (loop []
@@ -53,5 +59,3 @@
         (when-let [v (<! ch)]
           (f v)
           (recur)))))
-
-

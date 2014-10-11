@@ -16,4 +16,5 @@
                  [clj-time "0.8.0"]
                  [metrics-clojure "2.3.0"]
                  [metrics-clojure-graphite "2.3.0"]
-                 [overtone "0.9.1"]])
+                 [overtone "0.9.1"]
+                 [incanter/incanter-pdf "1.5.5"]])
