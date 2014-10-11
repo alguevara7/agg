@@ -35,6 +35,10 @@
 
 ;;(defn agg [in f init out n msecs]
 
+
+;;- change message-chunk-size, flush n limit, flush msecs limit, input channel size, output channel size with Midi device
+;;  - close current input
+;;  - create new agg :) with new params
 (defn start-counting [counter-type partition-id]
   (let [in (chan (buffer-with-metrics (buffer 256) (str "input." partition-id)))
         out (chan (buffer-with-metrics (buffer 32) (str "output." partition-id)))]

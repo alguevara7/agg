@@ -8,6 +8,14 @@ TBD
 
 ## TODO
 
+- change message-chunk-size, flush n limit, flush msecs limit, input channel size, output channel size with Midi device
+  - close current input
+  - create new agg :) with new params
+
+- use normal distribution for simulation
+
+- remove flushed-at (check delta != null instead)
+
 - (X) retrieve events in batches
 
 - add core.typed
@@ -15,12 +23,6 @@ TBD
 - (X) integrated with graphite !
 
 - (X) midi control exploration
-
-- change message-chunk-size, flush n limit, flush msecs limit, input channel size, output channel size with Midi device
-  - close current input
-  - create new agg :) with new params
-
-- use normal distribution for simulation
 
 - integrate with kafka !
   - use one node for now
