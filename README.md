@@ -11,6 +11,9 @@ TBD
 - change message-chunk-size, flush n limit, flush msecs limit, input channel size, output channel size with Midi device
   - close current input
   - create new agg :) with new params
+  - mmmm I have to wait for the out channel to close ... otherwise aggregates will be skewed!darn!
+    - it may be better if I could just stop the processing immediately !
+  - execute Midi command only if it has been about 2 seconds since the last time a command was received
 
 - use normal distribution for simulation
 

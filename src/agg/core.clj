@@ -40,7 +40,7 @@
   "
   (go (loop [offset init-offset]
         (let [data (f offset)]
-          (if (coll? data)
+          (if (sequential? data)
             (do (<! (onto-chan ch data false))
               (when-not (.closed? ch)
                 (<! (async/timeout period))
