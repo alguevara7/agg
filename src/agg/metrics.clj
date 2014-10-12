@@ -16,8 +16,9 @@
     (.full? buf))
   (remove! [this]
     (dec! c)
-    (mark! m)
-    (.remove! buf))
+    (let [v (.remove! buf)]
+      (mark! m (count v));;pass in a function instead ... maybe not be always count
+      v))
   (add!* [this itm]
     (inc! c)
     (.add!* buf itm)

@@ -1,7 +1,7 @@
 (ns ad-view-counter
   (require [agg.core :refer :all]
            [agg.metrics :refer :all]
-           [clojure.core.async :refer [chan close! buffer]]
+           [clojure.core.async :refer [chan close! buffer go-loop <! timeout go <!!]]
            [clojure.java.jdbc :as jdbc]
            [clj-time.core :as t]
            [clj-time.coerce :as c]))
@@ -39,34 +39,53 @@
 ;;- change message-chunk-size, flush n limit, flush msecs limit, input channel size, output channel size with Midi device
 ;;  - close current input
 ;;  - create new agg :) with new params
-(defn start-counting [counter-type partition-id]
-  (let [in (chan (buffer-with-metrics (buffer 256) (str "input." partition-id)))
-        out (chan (buffer-with-metrics (buffer 32) (str "output." partition-id)))]
-    (agg in increment-counter {} out 64 (* 5 1000))
+(defn start-counting [counter-type partition-id in-size out-size chunk-size]
+  (let [in (chan (buffer-with-metrics (buffer in-size) (str "input." partition-id)))
+        out-buf (buffer-with-metrics (buffer out-size) (str "output." partition-id))
+        out (chan out-buf)]
+    (agg in increment-counter {} out chunk-size (* 1 1000))
     (sample-from-offset (partial fetch-event partition-id) 0 1 in)
     (subscribe out (partial flush-state partition-id counter-type))
-    in)
+    (fn []
+      (close! in)
+      (close! out)
+      (go-loop []
+               (println "waiting ...")
+               (<! (timeout 1000))
+               (when-not (zero? (count out-buf))
+                 (recur)))))
   )
 
 (start-reporter 5)
 
-(def c1 (start-counting "view" 1))
-(def c2 (start-counting "view" 2))
-(def c3 (start-counting "view" 3))
-(def c4 (start-counting "view" 4))
-(def c5 (start-counting "view" 5))
-(def c6 (start-counting "view" 6))
-(def c7 (start-counting "view" 7))
-(def c8 (start-counting "view" 8))
-(def c9 (start-counting "view" 9))
-(def c10 (start-counting "view" 10))
-(def c11 (start-counting "view" 11))
-(def c12 (start-counting "view" 12))
-(def c13 (start-counting "view" 13))
-;; (def c14 (start-counting "view" 14))
-;; (def c15 (start-counting "view" 15))
+#_(def c (start-counting "view" 1))
+#_(close! c)
 
-(close! c9)
+
+(def a
+(let [in-size (atom 64)
+      out-size (atom 16)
+      chunk-size (atom 32)
+      ch (atom nil)]
+  (reset! ch (start-counting "view" 0 @in-size @out-size @chunk-size))
+  (add-watch chunk-size ::chunk-size (fn [_ _ _ value]
+                                       (<!! (@ch))
+                                       (reset! ch (start-counting "view" 0 @in-size @out-size @chunk-size))))
+  (add-watch in-size ::in-size (fn [_ _ _ value]
+                                       (<!! (@ch))
+                                       (reset! ch (start-counting "view" 0 @in-size @out-size @chunk-size))))
+  (add-watch out-size ::out-size (fn [_ _ _ value]
+                                       (<!! (@ch))
+                                       (reset! ch (start-counting "view" 0 @in-size @out-size @chunk-size))))
+  [in-size out-size chunk-size]))
+
+
+(let [[in-size out-size chunk-size] a]
+  (reset! chunk-size 8))
+
+a
+
+
 
 
 
