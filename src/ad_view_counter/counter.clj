@@ -56,16 +56,16 @@
                  (recur)))))
   )
 
-(start-reporter 5)
+(start-reporter 1)
 
 #_(def c (start-counting "view" 1))
 #_(close! c)
 
 
 (def a
-(let [in-size (atom 64)
+(let [in-size (atom 16)
       out-size (atom 16)
-      chunk-size (atom 32)
+      chunk-size (atom 16)
       ch (atom nil)]
   (reset! ch (start-counting "view" 0 @in-size @out-size @chunk-size))
   (add-watch chunk-size ::chunk-size (fn [_ _ _ value]
@@ -81,7 +81,7 @@
 
 
 (let [[in-size out-size chunk-size] a]
-  (reset! chunk-size 8))
+  (reset! out-size 16))
 
 a
 
