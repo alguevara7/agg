@@ -8,6 +8,8 @@ TBD
 
 ## TODO
 
+- test metrics namespace!!
+
 - change message-chunk-size, flush n limit, flush msecs limit, input channel size, output channel size with Midi device
   - close current input
   - create new agg :) with new params
