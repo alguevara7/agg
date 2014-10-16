@@ -3,6 +3,14 @@
             [agg.core :refer :all]
             [clojure.core.async :refer [chan go <!! >!! alts!! timeout close! onto-chan]]))
 
+;; remove :flushed-at (easy now that there are tests)
+
+;;close out channel when in channel is closed
+
+;; flush every time n messages are processed
+
+;; flush every time timeout is elapsed
+
 
 (deftest put-state-in-out-channel
 

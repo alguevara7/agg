@@ -8,6 +8,10 @@ TBD
 
 ## TODO
 
+- remove flushed-at (check delta != null instead)
+
+- build with travis ci
+
 - test metrics namespace!!
 
 - change message-chunk-size, flush n limit, flush msecs limit, input channel size, output channel size with Midi device
@@ -18,8 +22,6 @@ TBD
   - execute Midi command only if it has been about 2 seconds since the last time a command was received
 
 - use normal distribution for simulation
-
-- remove flushed-at (check delta != null instead)
 
 - (X) retrieve events in batches
 
