@@ -58,6 +58,8 @@ TBD
 
 - do-agg ---> flush on exit
 
+- use spout and bolt nomenclature from apache spark ? maybe ...
+
 ## License
 
 Copyright © 2014 FIXME
